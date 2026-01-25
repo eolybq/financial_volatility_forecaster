@@ -47,24 +47,26 @@ https://yezdata-financial-volatility-forecaster.hf.space/predict/{ticker}?p={p}&
 **Example Request**
 ```bash
 curl -X 'GET' \
-  'https://yezdata-financial-volatility-forecaster.hf.space/predict/aapl?p=1&q=1&dist=skewt' \
+  'http://localhost:7860/predict/AAPL?p=1&q=1&dist=skewt' \
   -H 'accept: application/json'
 ```
 
 ```http
-https://yezdata-financial-volatility-forecaster.hf.space/predict/aapl?p=1&q=1&dist=skewt
+http://localhost:7860/predict/AAPL?p=1&q=1&dist=skewt
 ```
 
 **Example Response**
 ```json
 {
   "ticker": "AAPL",
+  "target_date": "2026-01-26",
+  "model": "garch",
   "garch_params": {
     "p": 1,
     "q": 1,
     "dist": "skewt"
   },
-  "predicted_volatility": 1.3150833040963563
+  "predicted_volatility": 1.3150834107168863
 }
 ```
 

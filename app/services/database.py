@@ -1,6 +1,4 @@
-from datetime import datetime, timezone
-import pandas as pd
-from pandas.tseries.offsets import BusinessDay
+from datetime import datetime, timezone, date
 from sqlalchemy import create_engine, text
 from loguru import logger
 
@@ -44,14 +42,12 @@ def create_table() -> None:
 
 
 
-
-def store_pred(ticker: str, pred: float, last_data_date: pd.Timestamp, params: dict) -> None:
+def store_preds(ticker: str, pred: float, target_date: date, params: dict) -> None:
     if engine is None:
         logger.info(f"Skipping DB save for {ticker} (DB not configured)")
         return
 
 
-    target_date = (last_data_date + BusinessDay(1)).date()
     execution_time = datetime.now(timezone.utc)
     pred = pred.item() if hasattr(pred, "item") else float(pred)
 

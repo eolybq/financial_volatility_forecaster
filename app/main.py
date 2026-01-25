@@ -4,12 +4,14 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from loguru import logger
 from typing import Literal
+from datetime import date
+from pandas.tseries.offsets import BusinessDay
 
 from app.config import setup_logging
 from app.config import DEFAULT_P, DEFAULT_Q, DEFAULT_DIST
 from app.services.fetch_data import get_data
 from app.services.garch_model import get_garch_pred
-from app.services.database import store_pred, create_table
+from app.services.database import store_preds, create_table
 
 
 setup_logging()
@@ -27,6 +29,8 @@ class GarchParams(BaseModel):
 
 class PredictionResponse(BaseModel):
     ticker: str
+    target_date: date
+    model: str
     garch_params: GarchParams
     predicted_volatility: float
 
@@ -52,6 +56,8 @@ def predict(
     q: int = DEFAULT_Q,
     dist: DistType = DEFAULT_DIST
 ):
+    model = None
+
     ticker = ticker.upper()
     garch_params = {"p": p, "q": q, "dist": dist}
 
@@ -60,17 +66,21 @@ def predict(
         raise HTTPException(status_code=404, detail=f"Data for ticker '{ticker}' not found")
 
     garch_pred = get_garch_pred(data, p=p, q=q, dist=dist)
+    model = "garch"
     if garch_pred is None:
         raise HTTPException(status_code=500, detail=f"GARCH model failed to converge for {ticker} (check logs)")
 
     last_date = data.index.max()
+    target_date = (last_date + BusinessDay(1)).date()
     try:
-        store_pred(ticker=ticker, pred=garch_pred, last_data_date=last_date, params=garch_params)
+        store_preds(ticker=ticker, pred=garch_pred, target_date=target_date, params=garch_params)
     except Exception:
         logger.exception(f"DB error while storing {ticker} predictions")
 
     return {
         "ticker": ticker,
+        "target_date": target_date,
+        "model": model,
         "garch_params": garch_params,
         "predicted_volatility": garch_pred
     }
