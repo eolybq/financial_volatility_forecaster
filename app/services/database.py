@@ -34,7 +34,8 @@ def create_table() -> None:
             p INTEGER NOT NULL,
             q INTEGER NOT NULL,
             dist VARCHAR(15) NOT NULL,
-            prediction FLOAT NOT NULL
+            prediction FLOAT NOT NULL,
+            CONSTRAINT unique_pred UNIQUE (ticker, target_date, p, q, dist)
         );
     """)
     with engine.begin() as conn:
@@ -57,8 +58,11 @@ def store_pred(ticker: str, pred: float, last_data_date: pd.Timestamp, params: d
     sql_insert = text("""
         INSERT INTO garch_preds (ticker, target_date, prediction, execution_time, p, q, dist)
         VALUES (:ticker, :target_date, :prediction, :execution_time, :p, :q, :dist)
+        ON CONFLICT (ticker, target_date, p, q, dist) 
+        DO UPDATE SET 
+            prediction = EXCLUDED.prediction,
+            execution_time = EXCLUDED.execution_time;
     """)
-
     with engine.begin() as conn:
         conn.execute(sql_insert, {
             "ticker": ticker, 
