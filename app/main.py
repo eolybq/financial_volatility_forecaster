@@ -17,7 +17,7 @@ api = FastAPI(title="Financial Volatility Forecaster")
 
 
 # ---Pydantic models---
-DistType = Literal['norm', 't', 'skewt', 'ged']
+DistType = Literal['normal', 't', 'skewt', 'ged']
 
 class GarchParams(BaseModel):
     p: int

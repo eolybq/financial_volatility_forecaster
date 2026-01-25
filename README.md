@@ -42,7 +42,7 @@ https://yezdata-financial-volatility-forecaster.hf.space/predict/{ticker}?p={p}&
 | `{ticker}` | string | ✅ Yes | - | Target Stock Ticker symbol (e.g., `AAPL`, `BTC-USD`). |
 | `{p}` | int | ❌ No | `1` | **ARCH lag order**: Sensitivity to recent short-term market shocks. |
 | `{q}` | int | ❌ No | `1` | **GARCH lag order**: Long-term persistence (memory) of past volatility. |
-| `{dist}` | string | ❌ No | `skewt` | **Distribution**: Error assumption to account for fat tails. Available values : **norm, t, skewt, ged** |
+| `{dist}` | string | ❌ No | `skewt` | **Distribution**: Error assumption to account for fat tails. Available values : **normal, t, skewt, ged** |
 
 **Example Request**
 ```bash
