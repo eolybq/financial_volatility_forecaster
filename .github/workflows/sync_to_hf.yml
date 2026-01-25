@@ -23,4 +23,4 @@ jobs:
         run: |
           git config --global user.email "bot@github.com"
           git config --global user.name "GitHub Actions Bot"
-          git push https:yezdata:$HF_TOKEN@huggingface.co/spaces/yezdata/financial-volatility-forecaster main --force
+          git push "https:yezdata:$HF_TOKEN@huggingface.co/spaces/yezdata/financial-volatility-forecaster main --force"
