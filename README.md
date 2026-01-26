@@ -91,7 +91,7 @@ The system utilizes the industry-standard `arch` library to perform maximum like
 Instead of transient results, every prediction is grounded in a PostgreSQL backend:
 *   **Schema Design:** Stores ticker, target date, model parameters (p, q, dist), and the predicted sigma.
 *   **Retraining:** Get predictions data from PostgreSQL DB - evaluate to inspect predictions accuracy on realized days.
-*   **Business Logic:** Automatically calculates the `target_date` using `BusinessDay` offsets to ensure predictions align with market sessions.
+*   **Business Logic:** Automatically calculates the `target_date` using `BusinessDay` (for Crypto -> basic 1 day offset) offsets to ensure predictions align with market sessions.
 
 ### 4. Deployment & Infrastructure (FastAPI + Docker)
 Exposed the core logic via a modern FastAPI backend, ready for containerized scaling.

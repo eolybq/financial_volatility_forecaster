@@ -30,7 +30,7 @@ class PredictionResponse(BaseModel):
     ticker: str
     target_date: date
     model: str
-    garch_params: GarchParams
+    model_params: GarchParams
     predicted_volatility: float
 
 
@@ -78,7 +78,7 @@ def predict(
         "ticker": ticker,
         "target_date": target_date,
         "model": model,
-        "garch_params": garch_params,
+        "model_params": garch_params,
         "predicted_volatility": garch_pred
     }
 
