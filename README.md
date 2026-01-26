@@ -78,6 +78,7 @@ http://localhost:7860/predict/AAPL?p=1&q=1&dist=skewt
 Handling financial data requires precision. The ingestion engine:
 *   **Log-Returns Transformation:** Automatically converts raw closing prices into stationary log-returns, essential for statistical modeling.
 *   **Auto-Cleaning:** Handles multi-index columns and missing values from the Yahoo Finance API.
+*   **Real-time Integrity:** Filters out incomplete daily candles if the market is still open (e.g., removes today's data for US Equities before 16:00 ET) to ensure model accuracy.
 *   **Resiliency:** Implements logging via `loguru` to track data gaps and fetch errors.
 
 ### 2. High-Fidelity Volatility Modeling (`garch_model.py`)
