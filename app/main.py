@@ -89,7 +89,7 @@ def predict(
 
 
 @api.get("/report")
-def show_report_dashboard()
+def show_report_dashboard():
     # TODO
     pass
 
