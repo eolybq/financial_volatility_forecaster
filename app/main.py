@@ -88,6 +88,13 @@ def predict(
     }
 
 
+@api.get("/report")
+def show_report_dashboard()
+    # TODO
+    pass
+
+
+
 @api.get("/health", status_code=200)
 def health_check():
     return {"status": "healthy"}

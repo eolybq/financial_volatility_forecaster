@@ -11,7 +11,7 @@ if DB_URL:
     try:
         engine = create_engine(DB_URL)
     except Exception:
-        logger.exception(f"Invalid DB_URL format: {DB_URL}")
+        logger.exception(f"Invalid DB_URL format. Length of DB_URL: {len(DB_URL)}")
         engine = None
 else:
     logger.warning("DB_URL is not set. Database features will be disabled.")
