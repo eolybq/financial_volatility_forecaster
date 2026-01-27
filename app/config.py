@@ -31,14 +31,23 @@ def setup_logging() -> None:
 # + 20m for yfinance delay
 _equity_base = {
     "timezones": {
-        # NYSE / NASDAQ (Close 16:00) -> 16:20
+        # AMERICA
         "America/New_York": {"hour": 16, "minute": 20},
-        # London LSE (Close 16:30) -> 16:50
+        "America/Toronto": {"hour": 16, "minute": 20},
+        # EUROPE
         "Europe/London": {"hour": 16, "minute": 50},
-        # Xetra / Frankfurt / Paris (Close 17:30) -> 17:50
         "Europe/Berlin": {"hour": 17, "minute": 50},
         "Europe/Paris": {"hour": 17, "minute": 50},
         "Europe/Amsterdam": {"hour": 17, "minute": 50},
+        "Europe/Zurich": {"hour": 17, "minute": 50},
+        "Europe/Madrid": {"hour": 17, "minute": 50},
+        "Europe/Rome": {"hour": 17, "minute": 50},
+        # ASIA + PACIFIC
+        "Asia/Tokyo": {"hour": 15, "minute": 20},
+        "Asia/Hong_Kong": {"hour": 16, "minute": 20},
+        "Asia/Singapore": {"hour": 17, "minute": 20},
+        "Asia/Kolkata": {"hour": 15, "minute": 50},
+        "Australia/Sydney": {"hour": 16, "minute": 20},
     },
     # SAFE FALLBACK FOR OTHER MARKETS
     "default": {"hour": 18, "minute": 0},
