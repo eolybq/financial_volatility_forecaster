@@ -125,26 +125,25 @@ def predict(
 @api.get("/report", response_class=HTMLResponse)
 def show_report_dashboard(request: Request):
     error_data = None
-    i = 0
     attempts = 10
 
-    while i < attempts:
+    for i in range(attempts):
         try:
             error_data = get_error_data()
-            if error_data is None or error_data.empty:
-                attempts -= 1
-                logger.error(
-                    f"Could not get data from 'garch_performance' DB\nAttempt:{i}\nRetrying..."
-                )
-                time.sleep(5)
 
-            break
+            if error_data is not None and not error_data.empty:
+                break
 
-        except Exception:
-            attempts -= 1
-            logger.exception(
-                f"Got Exception while getting data from garch_performance\nAttempt: {i}\nRetrying..."
+            logger.debug(
+                f"Attempt {i + 1}/{attempts}: Could not get data from 'garch_performance' DB. Retrying..."
             )
+
+        except Exception as e:
+            logger.debug(
+                f"Attempt {i + 1}/{attempts}: Exception fetching data: {e}. Retrying..."
+            )
+
+        if i < attempts - 1:
             time.sleep(5)
 
     if error_data is None or error_data.empty:
@@ -155,27 +154,36 @@ def show_report_dashboard(request: Request):
             "db_error.html", {"request": request}, status_code=503
         )
 
-    metrics_date, metrics_ticker, worst_tickers = get_metrics_data(error_data)
-    plots = get_plots(metrics_date, metrics_ticker)
+    try:
+        metrics_date, metrics_ticker, worst_tickers = get_metrics_data(error_data)
+        plots = get_plots(metrics_date, metrics_ticker)
 
-    return templates.TemplateResponse(
-        "report.html",
-        {
-            "request": request,
-            "metrics": metrics_date.to_html(
-                index=False,
-                classes="table table-striped table-bordered table-hover",
-                border=0,
-            ),
-            "worst_tickers": worst_tickers.to_html(
-                index=False,
-                classes="table table-striped table-bordered table-hover",
-                border=0,
-            ),
-            "plot_scatter": plots["scatter_html"],
-            "plot_ts": plots["ts_html"],
-        },
-    )
+        return templates.TemplateResponse(
+            "report.html",
+            {
+                "request": request,
+                "metrics": metrics_date.to_html(
+                    index=False,
+                    classes="table table-striped table-bordered table-hover",
+                    border=0,
+                ),
+                "worst_tickers": worst_tickers.to_html(
+                    index=False,
+                    classes="table table-striped table-bordered table-hover",
+                    border=0,
+                ),
+                "plot_scatter": plots["scatter_html"],
+                "plot_ts": plots["ts_html"],
+            },
+        )
+
+    except Exception as e:
+        logger.exception(f"Critical error while processing report data: {e}")
+        return templates.TemplateResponse(
+            "processing_error.html",
+            {"request": request, "error_detail": str(e)},
+            status_code=500,
+        )
 
 
 @api.get("/health", status_code=200)
