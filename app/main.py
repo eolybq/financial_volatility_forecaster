@@ -181,7 +181,7 @@ def show_report_dashboard(request: Request):
         logger.exception(f"Critical error while processing report data: {e}")
         return templates.TemplateResponse(
             "processing_error.html",
-            {"request": request, "error_detail": str(e)},
+            {"request": request},
             status_code=500,
         )
 
