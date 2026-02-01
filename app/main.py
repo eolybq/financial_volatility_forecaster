@@ -1,16 +1,20 @@
 from datetime import date
 from typing import Literal
 
+import requests
 import uvicorn
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from loguru import logger
+from numpy import log as nplog
+from pandas import DataFrame
 from pydantic import BaseModel
 
 from app.config import DEFAULT_DIST, DEFAULT_P, DEFAULT_Q, setup_logging
 from app.services.database import create_preds_table, get_error_data, store_preds
-from app.services.fetch_data import get_data
 from app.services.garch_model import get_garch_pred
+from app.services.report import get_metrics_data, get_plots
 
 setup_logging()
 
@@ -59,13 +63,41 @@ def predict(
     ticker = ticker.upper()
     garch_params = {"p": p, "q": q, "dist": dist}
 
-    data, target_date = get_data(ticker)
+    url = f"https://yezdata-financial-data-fetcher.hf.space/get_data/{ticker}"
+    params = {"period": "4y", "interval": "1d"}
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        json_data = response.json()
+
+        data = DataFrame(json_data["data"])
+        target_date = json_data["target_date"]
+
+        logger.info(
+            f"Fetched data from Financial Data Fetcher API, rows: {data.count()}"
+        )
+
+    except requests.exceptions.RequestException:
+        logger.exception("HTTP error while fetching Financial Data Fetcher API")
+        raise HTTPException(
+            status_code=500, detail=f"Data for ticker '{ticker}' not found"
+        )
+
+    except Exception:
+        logger.exception("Error while fetching Financial Data Fetcher API")
+        raise HTTPException(
+            status_code=500, detail=f"Data for ticker '{ticker}' not found"
+        )
+
     if data is None or target_date is None:
         raise HTTPException(
             status_code=404, detail=f"Data for ticker '{ticker}' not found"
         )
 
-    garch_pred = get_garch_pred(data, p=p, q=q, dist=dist)
+    log_returns = nplog(data["Close"] / data["Close"].shift(1)).dropna() * 100
+
+    garch_pred = get_garch_pred(log_returns, p=p, q=q, dist=dist)
     model = "garch"
     if garch_pred is None:
         raise HTTPException(
@@ -89,28 +121,31 @@ def predict(
     }
 
 
-
-
 @api.get("/report", response_class=HTMLResponse)
-def show_report_dashboard():
-    error_data = get_error_data
+def show_report_dashboard(request: Request):
+    error_data = get_error_data()
 
-    metrics = get_metrics_data(error_data)
-    plots = get_plots(error_data)
+    metrics_date, metrics_ticker, worst_tickers = get_metrics_data(error_data)
+    plots = get_plots(metrics_date, metrics_ticker)
 
-    return templates.TemplateResponse("report.html", {
+    return templates.TemplateResponse(
+        "report.html",
+        {
             "request": request,
-            "target_date": str(df.iloc[0]['target_date']),
-            "count": len(df),
-            "mape": mape,
-            "mae": mae,
-            "rmse": rmse,
-            "bias": bias,
-            "plot_scatter": plots['scatter_html'],
-            "plot_hist": plots['hist_html'],
-            "table_html": table_html
-    })
-
+            "metrics": metrics_date.to_html(
+                index=False,
+                classes="table table-striped table-bordered table-hover",
+                border=0,
+            ),
+            "worst_tickers": worst_tickers.to_html(
+                index=False,
+                classes="table table-striped table-bordered table-hover",
+                border=0,
+            ),
+            "plot_scatter": plots["scatter_html"],
+            "plot_ts": plots["ts_html"],
+        },
+    )
 
 
 @api.get("/health", status_code=200)

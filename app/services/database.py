@@ -78,7 +78,7 @@ def get_error_data() -> pd.DataFrame:
         raise Exception("Could not connect to DB")
 
     sql_extract = text("""
-        SELECT ticker, target_date, error_abs, error_rel, error_sq
+        SELECT ticker, target_date, error_abs, error_rel, error_sq, error_raw
         FROM garch_performance
         WHERE target_date < CURRENT_DATE
             AND target_date >= CURRENT_DATE - INTERVAL '7 days'
@@ -87,6 +87,6 @@ def get_error_data() -> pd.DataFrame:
     with engine.begin() as conn:
         error_df = pd.read_sql(sql_extract, conn)
         logger.info("Got performance data for last week from DB")
-        logger.info(error_df)
+        logger.debug(f"Error DF rows: {error_df.count()}")
 
     return error_df

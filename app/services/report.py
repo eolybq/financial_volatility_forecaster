@@ -1,21 +1,90 @@
 import pandas as pd
-from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, text
-from loguru import logger
+import plotly.express as px
+from numpy import sqrt as npsq
 
 
+def get_metrics(df_grouped: pd.DataFrame) -> pd.DataFrame:
+    mape = df_grouped["error_rel"]
+    mae = df_grouped["error_abs"]
+    rmse = npsq(df_grouped["error_sq"])
+    bias = df_grouped["error_raw"]
 
-def get_metrics_data(df) -> None:
-    mape = df_res['error_rel'].mean()
-    mae = df_res['error_abs'].mean()
-    rmse = np.sqrt(mean_squared_error(results['Actual_Abs_Return'], results['Predicted_Volatility']))
-    # -- 4. Bias (Podstřelujeme nebo přestřelujeme?)
-    # -- Pokud je kladné -> Model systematicky nadhodnocuje riziko
-    # -- Pokud je záporné -> Model systematicky podceňuje riziko (nebezpečné!)
-    # AVG(predicted_vol - realized_vol) as global_bias
-    worst_tickers = df_res.sort_values('error_abs', ascending=False).head(5)
+    return pd.DataFrame(
+        {
+            "mape": mape,
+            "mae": mae,
+            "rmse": rmse,
+            "bias": bias,
+        }
+    )
 
 
-def get_plots(df) -> None:
-    # TODO -> vizualizace predikci v case - vzdy udelat i TS pro kazdou kombinace ticker model params v case pro vsechny jiz dostupne target_days
-    pass
+def get_metrics_data(
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    df_grouped_date = df.groupby("target_date").mean(numeric_only=True)
+    df_grouped_ticker = df.groupby("ticker").mean(numeric_only=True)
+
+    worst_tickers = df.sort_values("error_abs", ascending=False)[
+        ["ticker", "error_raw", "error_rel", "error_sq"]
+    ].head(10)
+    worst_tickers.rename(
+        columns={
+            "ticker": "Ticker",
+            "error_raw": "Error",
+            "error_rel": "Percent Error",
+            "error_sq": "Squared Error",
+        },
+        inplace=True,
+    )
+
+    metrics_df_date = get_metrics(df_grouped_date)
+    metrics_df_ticker = get_metrics(df_grouped_ticker)
+
+    metrics_df_date = metrics_df_date.reset_index().sort_values("target_date")
+    metrics_df_date.rename(
+        columns={
+            "target_date": "Prediction Date",
+            "mape": "MAPE",
+            "mae": "MAE",
+            "rmse": "RMSE",
+            "bias": "Bias (mean error)",
+        },
+        inplace=True,
+    )
+    metrics_df_ticker = metrics_df_ticker.reset_index().sort_values("ticker")
+    metrics_df_ticker.rename(
+        columns={
+            "ticker": "Ticker",
+            "mape": "MAPE",
+            "mae": "MAE",
+            "rmse": "RMSE",
+            "bias": "Bias (mean error)",
+        },
+        inplace=True,
+    )
+
+    return metrics_df_date, metrics_df_ticker, worst_tickers
+
+
+def get_plots(
+    metrics_df_date: pd.DataFrame, metrics_df_ticker: pd.DataFrame
+) -> dict[str, str]:
+    ts_fig = px.line(
+        metrics_df_date,
+        x="Prediction Date",
+        y="MAPE",
+        title="Mean Percentage Absolute Error for Nasdaq-100",
+        markers=True,
+    )
+    ts_fig_html = ts_fig.to_html(full_html=False, include_plotlyjs=False)
+
+    scatter_fig = px.scatter(
+        metrics_df_ticker,
+        x="Ticker",
+        y="MAE",
+        title="Mean Absolute Error per last week",
+    )
+    scatter_fig_html = scatter_fig.to_html(full_html=False, include_plotlyjs=False)
+
+    return {"ts_html": ts_fig_html, "scatter_html": scatter_fig_html}
