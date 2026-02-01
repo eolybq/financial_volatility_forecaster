@@ -2,12 +2,11 @@ import sys
 from datetime import datetime, timedelta
 
 import numpy as np
-import yfinance as yf # type: ignore
+import yfinance as yf  # type: ignore
 from loguru import logger
 from sqlalchemy import create_engine, text
 
 from app.config import DB_URL
-
 
 if DB_URL:
     try:
