@@ -130,6 +130,7 @@ def show_report_dashboard(request: Request):
     for i in range(attempts):
         try:
             error_data = get_error_data()
+            error_data["error_rel"] = error_data["error_rel"] * 100
 
             if error_data is not None and not error_data.empty:
                 break
