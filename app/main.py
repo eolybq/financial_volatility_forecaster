@@ -59,10 +59,10 @@ def read_root():
 def predict(
     ticker: str, p: int = DEFAULT_P, q: int = DEFAULT_Q, dist: DistType = DEFAULT_DIST
 ):
+    garch_params = GarchParams(p=p, q=q, dist=dist)
     model = None
 
     ticker = ticker.upper()
-    garch_params = {"p": p, "q": q, "dist": dist}
 
     url = f"https://yezdata-financial-data-fetcher.hf.space/get_data/{ticker}"
     params = {"period": "4y", "interval": "1d"}
@@ -96,9 +96,9 @@ def predict(
             status_code=404, detail=f"Data for ticker '{ticker}' not found"
         )
 
-    log_returns = nplog(data["Close"] / data["Close"].shift(1)).dropna() * 100
+    log_returns = nplog((data["Close"] / data["Close"].shift(1)).dropna()) * 100
 
-    garch_pred = get_garch_pred(log_returns, p=p, q=q, dist=dist)
+    garch_pred = get_garch_pred(log_returns, params=garch_params)
     model = "garch"
     if garch_pred is None:
         raise HTTPException(

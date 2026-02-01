@@ -1,5 +1,6 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from io import StringIO
 
 import pandas as pd
 import requests
@@ -17,7 +18,7 @@ def get_nasdaq_100() -> list | None:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
 
-        tables = pd.read_html(pd.io.common.StringIO(response.text))
+        tables = pd.read_html(StringIO(response.text))
 
         nasdaq_table = next(t for t in tables if "Ticker" in t.columns)
 

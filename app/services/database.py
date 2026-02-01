@@ -5,6 +5,7 @@ from loguru import logger
 from sqlalchemy import create_engine, text
 
 from app.config import DB_URL
+from app.main import GarchParams
 
 engine = None
 
@@ -41,13 +42,15 @@ def create_preds_table() -> None:
         logger.info("Succesfully created table 'garch_preds' or table exists")
 
 
-def store_preds(ticker: str, pred: float, target_date: date, params: dict) -> None:
+def store_preds(
+    ticker: str, pred: float, target_date: date, params: GarchParams
+) -> None:
     if engine is None:
         logger.info(f"Skipping DB save for {ticker} (DB not configured)")
         return
 
     execution_time = datetime.now(timezone.utc)
-    pred = pred.item() if hasattr(pred, "item") else float(pred)
+    pred = float(pred)
 
     sql_insert = text("""
         INSERT INTO garch_preds (ticker, target_date, prediction, execution_time, p, q, dist)
@@ -64,9 +67,9 @@ def store_preds(ticker: str, pred: float, target_date: date, params: dict) -> No
                 "ticker": ticker,
                 "target_date": target_date,
                 "execution_time": execution_time,
-                "p": params["p"],
-                "q": params["q"],
-                "dist": params["dist"],
+                "p": params.p,
+                "q": params.q,
+                "dist": params.dist,
                 "prediction": pred,
             },
         )

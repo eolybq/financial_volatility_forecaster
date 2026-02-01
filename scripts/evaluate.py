@@ -2,7 +2,7 @@ import sys
 from datetime import datetime, timedelta
 
 import numpy as np
-import yfinance as yf
+import yfinance as yf # type: ignore
 from loguru import logger
 from sqlalchemy import create_engine, text
 
