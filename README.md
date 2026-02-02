@@ -19,7 +19,7 @@ The pipeline now includes **automated daily predictions for the Nasdaq-100** and
 
 | Component | Feature | Technology |
 | :--- | :--- | :--- |
-| **Data Ingestion** | Fetching historical daily returns via external API. | [Financial Data Fetcher API](https://github.com/eolybq/financial_data_fetcher) |
+| **Data Ingestion** | Fetching historical daily returns via custom external API. | [Financial Data Fetcher API](https://yezdata-financial-data-fetcher.hf.space/docs) |
 | **Statistical Modeling** | GARCH(p,q) fitting with customizable distributions (Skew-t, GED). | `arch-py` |
 | **Persistence** | Structured storage of predictions for historical tracking. | `PostgreSQL` |
 | **Dashboard** | Interactive report for Nasdaq-100 forecast evaluation. | `Jinja2`, `Plotly`, `Bootstrap` |
