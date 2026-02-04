@@ -18,7 +18,7 @@ class GarchParams(BaseModel):
 
 
 class PredictionResponse(BaseModel):
-    ticker: str
+    symbol: str
     target_date: date
     model: str
     model_params: GarchParams

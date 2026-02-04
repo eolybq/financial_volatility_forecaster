@@ -1,13 +1,12 @@
 import time
 
-import requests
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from finfetcher import DataFetcher
 from loguru import logger
 from numpy import log as nplog
-from pandas import DataFrame
 
 from app.config import (
     DEFAULT_DIST,
@@ -42,45 +41,30 @@ def read_root():
     return RedirectResponse(url="/docs")
 
 
-@api.get("/predict/{ticker}", response_model=PredictionResponse)
+@api.get("/predict/{symbol}", response_model=PredictionResponse)
 def predict(
-    ticker: str, p: int = DEFAULT_P, q: int = DEFAULT_Q, dist: DistType = DEFAULT_DIST
+    symbol: str, p: int = DEFAULT_P, q: int = DEFAULT_Q, dist: DistType = DEFAULT_DIST
 ):
     garch_params = GarchParams(p=p, q=q, dist=dist)
     model = None
 
-    ticker = ticker.upper()
-
-    url = f"https://yezdata-financial-data-fetcher.hf.space/get_data/{ticker}"
-    params = {"period": "4y", "interval": "1d"}
+    fetcher = DataFetcher(symbol)
 
     try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        json_data = response.json()
-
-        data = DataFrame(json_data["data"])
-        target_date = json_data["target_date"]
+        data = fetcher.get_data()
+        target_date = fetcher.target_date
 
         logger.info(
-            f"Fetched data from Financial Data Fetcher API, rows: {data.count()}"
+            f"Got data from FinFetcher, rows: {data.count()}, target_date: {target_date}"
         )
 
-    except requests.exceptions.RequestException:
-        logger.exception("HTTP error while fetching Financial Data Fetcher API")
-        raise HTTPException(
-            status_code=500, detail=f"Data for ticker '{ticker}' not found"
-        )
-
-    except Exception:
-        logger.exception("Error while fetching Financial Data Fetcher API")
-        raise HTTPException(
-            status_code=500, detail=f"Data for ticker '{ticker}' not found"
-        )
+    except Exception as e:
+        logger.exception("Error while getting data from FinFetcher")
+        raise HTTPException(status_code=500, detail=e)
 
     if data is None or target_date is None:
         raise HTTPException(
-            status_code=404, detail=f"Data for ticker '{ticker}' not found"
+            status_code=404, detail=f"Data for symbol '{symbol}' not found"
         )
 
     log_returns = nplog((data["Close"] / data["Close"].shift(1)).dropna()) * 100
@@ -90,18 +74,18 @@ def predict(
     if garch_pred is None:
         raise HTTPException(
             status_code=500,
-            detail=f"GARCH model failed to converge for {ticker} (check logs)",
+            detail=f"GARCH model failed to converge for {symbol} (check logs)",
         )
 
     try:
         store_preds(
-            ticker=ticker, pred=garch_pred, target_date=target_date, params=garch_params
+            ticker=symbol, pred=garch_pred, target_date=target_date, params=garch_params
         )
     except Exception:
-        logger.exception(f"DB error while storing {ticker} predictions")
+        logger.exception(f"DB error while storing {symbol} predictions")
 
     return {
-        "ticker": ticker,
+        "symbol": fetcher.symbol,
         "target_date": target_date,
         "model": model,
         "model_params": garch_params,

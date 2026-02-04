@@ -92,7 +92,7 @@ def run_evaluation() -> None:
                 threads=False,
             )
 
-            if df_bulk.empty:
+            if df_bulk is None or df_bulk.empty:
                 logger.warning(f"No data found for {eval_date} (Holiday?). Skipping.")
                 continue
 
@@ -112,11 +112,11 @@ def run_evaluation() -> None:
 
                     log_returns = (
                         np.log(
-                            ticker_df["Close"] / ticker_df["Close"].shift(1)
-                        ).dropna()
+                            ticker_df["Close"] / ticker_df["Close"].shift(1).dropna()
+                        )
                         * 100
                     )
-                    if log_returns.empty:
+                    if log_returns is None or log_returns.size == 0:
                         continue
 
                     real_var = np.sum(log_returns**2)
