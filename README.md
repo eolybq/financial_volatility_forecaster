@@ -1,4 +1,4 @@
-# Financial Volatility Forecaster: End-to-End Quantitative Pipeline
+# Financial Volatility Forecaster: End-to-End Quantitative API Pipeline
 [![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](#)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](#)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)](#)
