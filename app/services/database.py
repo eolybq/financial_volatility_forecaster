@@ -29,11 +29,9 @@ def create_preds_table() -> None:
             ticker VARCHAR(10) NOT NULL,
             execution_time TIMESTAMP DEFAULT NOW(),
             target_date DATE NOT NULL,
-            p INTEGER NOT NULL,
-            q INTEGER NOT NULL,
-            dist VARCHAR(15) NOT NULL,
-            prediction FLOAT NOT NULL,
-            CONSTRAINT unique_pred UNIQUE (ticker, target_date, p, q, dist)
+            model_config VARCHAR(20) NOT NULL,
+            prediction DOUBLE PRECISION NOT NULL,
+            CONSTRAINT unique_pred UNIQUE (ticker, target_date, model_config)
         );
     """)
     with engine.begin() as conn:
@@ -50,11 +48,12 @@ def store_preds(
 
     execution_time = datetime.now(timezone.utc)
     pred = float(pred)
+    model_config = "_".join(str(atr) for atr in vars(params).values())
 
     sql_insert = text("""
         INSERT INTO garch_preds (ticker, target_date, prediction, execution_time, p, q, dist)
-        VALUES (:ticker, :target_date, :prediction, :execution_time, :p, :q, :dist)
-        ON CONFLICT (ticker, target_date, p, q, dist) 
+        VALUES (:ticker, :target_date, :prediction, :execution_time, :model_config)
+        ON CONFLICT (ticker, target_date, model_config) 
         DO UPDATE SET 
             prediction = EXCLUDED.prediction,
             execution_time = EXCLUDED.execution_time;
@@ -66,9 +65,7 @@ def store_preds(
                 "ticker": ticker,
                 "target_date": target_date,
                 "execution_time": execution_time,
-                "p": params.p,
-                "q": params.q,
-                "dist": params.dist,
+                "model_config": model_config,
                 "prediction": pred,
             },
         )

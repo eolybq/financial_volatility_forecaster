@@ -24,16 +24,21 @@ else:
 
 def create_perf_table() -> None:
     sql_create = text("""
-        CREATE TABLE IF NOT EXISTS garch_performance (
-            id SERIAL PRIMARY KEY,
-            evaluation_date DATE NOT NULL,
-            target_date DATE NOT NULL,
-            ticker VARCHAR(10),
-            realized_vol FLOAT,
-            error_raw FLOAT,
-            error_abs FLOAT,
-            error_rel FLOAT,
-            error_sq FLOAT
+        CREATE TABLE "garch_performance" (
+        "prediction_id" integer PRIMARY KEY,
+        
+        "evaluation_date" date NOT NULL,
+        
+        "realized_vol" double precision,
+        "error_raw" double precision,
+        "error_abs" double precision,
+        "error_rel" double precision,
+        "error_sq" double precision,
+
+        CONSTRAINT "fk_garch_performance_prediction" 
+            FOREIGN KEY ("prediction_id") 
+            REFERENCES "garch_preds"("id") 
+            ON DELETE CASCADE
         );
     """)
     with engine.begin() as conn:
@@ -43,14 +48,18 @@ def create_perf_table() -> None:
 
 def get_missing_preds() -> dict:
     sql_extract = text("""
-        SELECT p.ticker, p.target_date, p.prediction
-        FROM garch_preds as p
-        LEFT JOIN garch_performance as gp
-            ON p.ticker = gp.ticker AND p.target_date = gp.target_date
-        WHERE gp.id IS NULL
+        SELECT 
+            p.id,
+            p.ticker, 
+            p.target_date, 
+            p.prediction, 
+        FROM garch_preds AS p
+        LEFT JOIN garch_performance AS gp
+            ON p.id = gp.prediction_id
+        WHERE gp.prediction_id IS NULL
             AND p.target_date < CURRENT_DATE
-            AND p.target_date >= CURRENT_DATE - INTERVAL '7 days'
-        ORDER BY p.target_date ASC
+            AND p.target_date >= CURRENT_DATE - INTERVAL '10 days'
+        ORDER BY p.target_date ASC;
     """)
 
     with engine.connect() as conn:
@@ -137,9 +146,8 @@ def run_evaluation() -> None:
 
                     results_to_insert.append(
                         {
+                            "prediction_id": row.id,
                             "evaluation_date": datetime.now().date(),
-                            "target_date": eval_date,
-                            "ticker": row.ticker,
                             "realized_vol": real_vol,
                             "error_raw": error_raw,
                             "error_abs": error_abs,
@@ -154,11 +162,11 @@ def run_evaluation() -> None:
 
             if results_to_insert:
                 sql_insert = text("""
-                   INSERT INTO garch_performance
-                   (evaluation_date, target_date, ticker, realized_vol, error_raw, error_abs, error_rel, error_sq)
-                   VALUES
-                   (:evaluation_date, :target_date, :ticker, :realized_vol, :error_raw, :error_abs, :error_rel, :error_sq)
-               """)
+                    INSERT INTO garch_performance
+                    (prediction_id, evaluation_date, realized_vol, error_raw, error_abs, error_rel, error_sq)
+                    VALUES
+                    (:prediction_id, :evaluation_date, :realized_vol, :error_raw, :error_abs, :error_rel, :error_sq)
+                """)
 
                 with engine.begin() as conn:
                     conn.execute(sql_insert, results_to_insert)

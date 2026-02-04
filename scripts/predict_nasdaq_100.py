@@ -11,7 +11,6 @@ def get_nasdaq_100() -> list | None:
     url = "https://en.wikipedia.org/wiki/Nasdaq-100"
 
     try:
-        # Wikipedia blocks requests without a User-Agent
         headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
@@ -35,7 +34,7 @@ API_URL = "https://yezdata-financial-volatility-forecaster.hf.space/predict/{tic
 
 
 def trigger_ticker(ticker: str) -> tuple[bool, str, str | None]:
-    params = {"p": 1, "q": 1, "dist": "skewt"}
+    params = {"p": 4, "q": 4, "dist": "skewt"}
     try:
         response = requests.get(
             API_URL.format(ticker=ticker), params=params, timeout=15
