@@ -21,4 +21,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=user src ./src
 
-CMD ["uvicorn", "app.main:api", "--host", "0.0.0.0", "--port", "7860", "--workers", "2"]
+CMD ["uvicorn", "src.main:api", "--host", "0.0.0.0", "--port", "7860", "--workers", "2"]
