@@ -50,4 +50,8 @@ jobs:
           git commit -m "Setup HF Metadata" || echo "No changes to commit"
 
           git remote add space "https://yezdata:$HF_TOKEN@huggingface.co/spaces/yezdata/financial-volatility-forecaster-report"
-          git subtree push --prefix report space main --force
+
+          git subtree split --prefix api -b hf-deploy-branch
+          git push space hf-deploy-branch:main --force
+          git branch -D hf-deploy-branch
+
