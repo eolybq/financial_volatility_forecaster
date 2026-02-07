@@ -83,7 +83,7 @@ def get_error_data() -> pd.DataFrame | None:
     for i in range(attempts):
         try:
             sql_extract = text("""
-                SELECT p.ticker, p.target_date, p.model_config, p.prediction, gp.realized_vol, gp.error_abs, gp.error_rel, gp.error_sq, gp.error_raw
+                SELECT p.ticker, p.target_date, p.model_config, gp.error_abs, gp.error_rel, gp.error_sq, gp.error_raw
                 FROM garch_performance gp 
                     JOIN garch_preds p
                     ON gp.prediction_id = p.id

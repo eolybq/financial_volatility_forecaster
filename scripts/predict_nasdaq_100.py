@@ -11,6 +11,7 @@ API_URL = os.getenv("API_URL")
 if not API_URL:
     logger.error("API_URL environment variable is not set.")
     sys.exit(1)
+API_ENDPOINT = API_URL + "/predict/{ticker}"
 
 
 def get_nasdaq_100() -> list | None:
@@ -36,14 +37,10 @@ def get_nasdaq_100() -> list | None:
         return None
 
 
-API_ENDPOINT = API_URL + "/predict/{ticker}"
-
-
-def trigger_ticker(ticker: str) -> tuple[bool, str, str | None]:
-    params = {"p": 4, "q": 4, "dist": "skewt"}
+def trigger_ticker(params: dict, ticker: str) -> tuple[bool, str, str | None]:
     try:
         response = requests.get(
-            API_ENDPOINT.format(ticker=ticker), params=params, timeout=15
+            API_ENDPOINT.format(ticker=ticker), params=params, timeout=30
         )
         response.raise_for_status()
         return True, ticker, None
@@ -51,12 +48,14 @@ def trigger_ticker(ticker: str) -> tuple[bool, str, str | None]:
         return False, ticker, str(e)
 
 
-def main():
+def main(params):
     tickers = get_nasdaq_100()
     if not tickers:
         sys.exit(1)
     with ThreadPoolExecutor(max_workers=3) as executor:
-        future_to_ticker = {executor.submit(trigger_ticker, t): t for t in tickers}
+        future_to_ticker = {
+            executor.submit(trigger_ticker, params, t): t for t in tickers
+        }
 
         for future in future_to_ticker:
             success, ticker, error = future.result()
@@ -68,4 +67,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    params1 = {"p": 1, "q": 1, "dist": "skewt"}
+    params4 = {"p": 4, "q": 4, "dist": "skewt"}
+    main(params1)
+    main(params4)
