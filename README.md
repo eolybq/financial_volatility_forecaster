@@ -32,7 +32,7 @@ Full interactive documentation (Swagger UI) is available here:
 👉 **[Live API Docs](https://yezdata-financial-volatility-forecaster.hf.space/docs)**
 
 ### Prediction Evaluation Dashboard
-View the performance of Nasdaq-100 forecasts from the last few days.
+View the performance of Nasdaq-100 forecasts from the last 10 days.
 👉 **[Live Performance Report](https://yezdata-financial-volatility-forecaster-report.hf.space)**
 
 ### Predict Volatility Endpoint
@@ -93,9 +93,9 @@ Instead of transient results, every prediction is grounded in a PostgreSQL backe
 
 ### 4. Performance Dashboard (Streamlit)
 A new interactive dashboard provides transparency into model performance:
-*   **Time-Series Tracking:** Visualize Mean Absolute Percentage Error (MAPE) trends over the last days.
+*   **Time-Series Tracking:** Visualize Mean Absolute Percentage Error (MAPE) trends over the recent days.
 *   **Asset Performance:** Identify which tickers are most difficult to forecast with scatter plots of Mean Absolute Error (MAE).
-*   **Mean Metrics Table:** Shows numerical metrics for past days in their means across the Nasdaq-100 portfolio.
+*   **Mean Metrics Table:** Shows numerical metrics for recent past days in their means across the Nasdaq-100 portfolio.
 *   **Worst Tickers Table:** Lists assets where the model deviated most from reality, aiding in parameter tuning.
 
 ### 5. High-Fidelity Volatility Modeling (`garch_model.py`)

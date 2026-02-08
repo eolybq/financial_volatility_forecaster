@@ -28,7 +28,7 @@ def render_dashboard(data):
 
     # UI
     st.markdown(
-        "<h1 style='text-align: center;'>📈 Nasdaq-100 Volatility Forecast Evaluation (Last 10 Market Days)</h1>",
+        "<h1 style='text-align: center;'>📈 Nasdaq-100 Volatility Forecast Evaluation (Last 10 Days)</h1>",
         unsafe_allow_html=True,
     )
 
