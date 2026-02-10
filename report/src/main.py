@@ -1,16 +1,17 @@
-import os
-
-import requests
 import streamlit as st
-from dotenv import load_dotenv
-from services.dashboard import render_dashboard
-from services.errors import render_db_error, render_error, render_processing_error
 
 st.set_page_config(
     page_title="Financial Volatility Forecaster Report",
-    page_icon="📈",
+    page_icon="📊",
     layout="wide",
 )
+
+import os  # noqa: E402
+
+import requests  # noqa: E402
+from dotenv import load_dotenv  # noqa: E402
+from services.dashboard import render_dashboard  # noqa: E402
+from services.errors import render_db_error, render_error, render_processing_error  # noqa: E402
 
 
 load_dotenv()
