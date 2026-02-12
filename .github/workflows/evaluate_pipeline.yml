@@ -2,7 +2,7 @@ name: PREDICTIONS, EVALUATION-Daily Nasdaq-100
 
 on:
   schedule:
-    - cron: '0 8 * * 2-6' # work days + 1 day to get RV
+    - cron: '0 10 * * 2-6' # work days + 1 day to get RV
   workflow_dispatch:
 jobs:
   predict_evaluate:

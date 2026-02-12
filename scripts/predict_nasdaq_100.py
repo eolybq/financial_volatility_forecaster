@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from io import StringIO
 
@@ -37,15 +38,24 @@ def get_nasdaq_100() -> list | None:
         return None
 
 
-def trigger_ticker(params: dict, ticker: str) -> tuple[bool, str, str | None]:
-    try:
-        response = requests.get(
-            API_ENDPOINT.format(ticker=ticker), params=params, timeout=30
-        )
-        response.raise_for_status()
-        return True, ticker, None
-    except Exception as e:
-        return False, ticker, str(e)
+def trigger_ticker(
+    params: dict, ticker: str, retries: int = 3, delay: int = 30
+) -> tuple[bool, str, str | None]:
+    for attempt in range(retries):
+        try:
+            response = requests.get(
+                API_ENDPOINT.format(ticker=ticker), params=params, timeout=30
+            )
+            response.raise_for_status()
+            return True, ticker, None
+        except Exception as e:
+            if attempt < retries - 1:
+                logger.warning(
+                    f"Attempt {attempt + 1} failed for {ticker}: {e}. Retrying in {delay}s..."
+                )
+                time.sleep(delay)
+            else:
+                return False, ticker, str(e)
 
 
 def main(params):

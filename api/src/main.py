@@ -43,6 +43,7 @@ def predict(
     symbol: str, p: int = DEFAULT_P, q: int = DEFAULT_Q, dist: DistType = DEFAULT_DIST
 ):
     garch_params = GarchParams(p=p, q=q, dist=dist)
+    n_params = garch_params.p + garch_params.q + 2
     model = None
 
     fetcher = DataFetcher(symbol)
@@ -65,6 +66,13 @@ def predict(
         )
 
     log_returns = nplog((data["Close"] / data["Close"].shift(1)).dropna()) * 100
+
+    if len(log_returns) < n_params * 50:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Not enough data points for GARCH({garch_params.p},{garch_params.q}) inference"
+            f"Required: {n_params * 50}, Available: {len(log_returns)}",
+        )
 
     garch_pred = get_garch_pred(log_returns, params=garch_params)
     model = "garch"
